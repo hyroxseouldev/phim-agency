@@ -9,9 +9,10 @@ type ProjectRow = {
   description: string;
   impact: string;
   thumbnail_image_path: string;
-  client_name: string | null;
-  year: string | null;
-  services: string[] | null;
+  hover_video_path?: string | null;
+  client_name?: string | null;
+  year?: string | null;
+  services?: string[] | null;
 };
 
 type ProjectImageRow = {
@@ -31,6 +32,8 @@ export type ProjectSummary = {
   impact: string;
   thumbnailImagePath: string;
   thumbnailImageUrl: string;
+  hoverVideoPath: string | null;
+  hoverVideoUrl: string | null;
 };
 
 export type ProjectImage = {
@@ -63,14 +66,16 @@ export function mapProjectSummary(row: ProjectRow): ProjectSummary {
     impact: row.impact,
     thumbnailImagePath: row.thumbnail_image_path,
     thumbnailImageUrl: getStoragePublicUrl("project-media", row.thumbnail_image_path),
+    hoverVideoPath: row.hover_video_path ?? null,
+    hoverVideoUrl: row.hover_video_path ? getStoragePublicUrl("project-media", row.hover_video_path) : null,
   };
 }
 
 export function mapProjectDetail(row: ProjectRow, images: ProjectImageRow[]): ProjectDetail {
   return {
     ...mapProjectSummary(row),
-    clientName: row.client_name,
-    year: row.year,
+    clientName: row.client_name ?? null,
+    year: row.year ?? null,
     services: row.services ?? [],
     images: images.map((image) => ({
       id: image.id,

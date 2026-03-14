@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { ProjectImageFrame } from "@/components/project-image-frame";
 import { mapProjectDetail, type ProjectDetail } from "@/lib/projects";
 import { createClient } from "@/lib/supabase/server";
@@ -16,7 +18,7 @@ async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
-    .select("id, slug, title, category, summary, description, impact, thumbnail_image_path, client_name, year, services")
+    .select("id, slug, title, category, summary, description, impact, thumbnail_image_path, hover_video_path, client_name, year, services")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
@@ -71,89 +73,110 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   return (
-    <main className="project-detail-page">
-      <section className="project-detail-hero">
-        <div className="container project-detail-stack">
-          <Link href="/#projects" className="project-back-link">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(199,143,98,0.2),transparent_28%),linear-gradient(180deg,#f7f2ec_0%,#f4eee7_45%,#faf6f1_100%)] text-[#10232b]">
+      <section className="px-4 pb-8 pt-10 sm:px-6">
+        <div className="mx-auto grid w-full max-w-7xl gap-7">
+          <Link
+            href="/#projects"
+            className="inline-flex min-h-11 w-fit items-center rounded-full border border-[#10232b]/12 bg-white/70 px-5 text-sm font-semibold text-[#10232b] backdrop-blur"
+          >
             프로젝트 목록으로
           </Link>
 
-          <div className="project-detail-heading">
-            <span className="eyebrow">{project.category}</span>
-            <h1>{project.title}</h1>
-            <p>{project.description}</p>
+          <div className="grid gap-4">
+            <Badge variant="outline" className="w-fit rounded-full border-[#143a46]/15 bg-white/70 px-3 py-1 uppercase tracking-[0.18em] text-[#143a46]">
+              {project.category}
+            </Badge>
+            <div className="max-w-4xl">
+              <h1 className="font-serif text-[clamp(3rem,8vw,6rem)] leading-[0.94] tracking-[-0.04em] text-balance">{project.title}</h1>
+              <p className="mt-5 text-sm leading-8 text-[#5f7278] sm:text-base">{project.description}</p>
+            </div>
           </div>
 
-          <div className="project-detail-meta-grid">
-            <div className="project-detail-meta-card project-detail-impact-card">
-              <span className="card-label">Impact</span>
-              <strong>{project.impact}</strong>
-            </div>
-            <div className="project-detail-meta-card">
-              <span className="card-label">Client</span>
-              <strong>{project.clientName ?? "Confidential"}</strong>
-            </div>
-            <div className="project-detail-meta-card">
-              <span className="card-label">Year</span>
-              <strong>{project.year ?? "Ongoing"}</strong>
-            </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="rounded-[1.7rem] border-transparent bg-[linear-gradient(180deg,rgba(20,58,70,0.96),rgba(12,41,49,0.96))] py-0 shadow-[0_24px_80px_rgba(10,29,35,0.14)]">
+              <CardContent className="p-6">
+                <span className="inline-flex text-[0.76rem] font-extrabold uppercase tracking-[0.16em] text-[#f8f4ee]/80">Impact</span>
+                <strong className="mt-3 block text-lg leading-7 text-[#f8f4ee]">{project.impact}</strong>
+              </CardContent>
+            </Card>
+            <Card className="rounded-[1.7rem] border-white/60 bg-white/75 py-0 shadow-[0_24px_70px_rgba(10,29,35,0.1)] backdrop-blur">
+              <CardContent className="p-6">
+                <span className="inline-flex text-[0.76rem] font-extrabold uppercase tracking-[0.16em] text-[#143a46]">Client</span>
+                <strong className="mt-3 block text-lg leading-7 text-[#10232b]">{project.clientName ?? "Confidential"}</strong>
+              </CardContent>
+            </Card>
+            <Card className="rounded-[1.7rem] border-white/60 bg-white/75 py-0 shadow-[0_24px_70px_rgba(10,29,35,0.1)] backdrop-blur">
+              <CardContent className="p-6">
+                <span className="inline-flex text-[0.76rem] font-extrabold uppercase tracking-[0.16em] text-[#143a46]">Year</span>
+                <strong className="mt-3 block text-lg leading-7 text-[#10232b]">{project.year ?? "Ongoing"}</strong>
+              </CardContent>
+            </Card>
           </div>
 
           <ProjectImageFrame
             src={project.thumbnailImageUrl}
             alt={`${project.title} 대표 이미지`}
             sizes="100vw"
-            className="project-hero-visual"
-            imageClassName="project-detail-image"
-            fallbackClassName="project-detail-fallback"
+            className="relative min-h-[300px] overflow-hidden rounded-[2.25rem] shadow-[0_24px_80px_rgba(10,29,35,0.12)] sm:min-h-[420px] lg:min-h-[560px]"
+            fallbackClassName="p-8 sm:p-10 [&>span]:text-[0.78rem] [&>span]:font-extrabold [&>span]:uppercase [&>span]:tracking-[0.16em] [&>span]:opacity-80 [&>strong]:max-w-[10ch] [&>strong]:font-serif [&>strong]:text-[clamp(2rem,5vw,4rem)] [&>strong]:leading-[0.95]"
             eyebrow={project.category}
             title={project.title}
           />
         </div>
       </section>
 
-      <section className="project-detail-content">
-        <div className="container project-detail-body">
-          <div className="project-detail-overview">
-            <div className="section-heading project-detail-section-heading">
-              <span className="eyebrow">Overview</span>
-              <h2>브랜드의 인상을 결과로 연결한 구조</h2>
+      <section className="px-4 py-8 sm:px-6">
+        <div className="mx-auto grid w-full max-w-7xl gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.7fr)]">
+          <div className="grid gap-5">
+            <div>
+              <Badge variant="outline" className="w-fit rounded-full border-[#143a46]/15 bg-white/70 px-3 py-1 uppercase tracking-[0.18em] text-[#143a46]">
+                Overview
+              </Badge>
+              <h2 className="mt-4 font-serif text-[clamp(2.2rem,4vw,4rem)] leading-[1.02] tracking-[-0.04em] text-balance">브랜드의 인상을 결과로 연결한 구조</h2>
             </div>
-            <p>{project.description}</p>
-            <p>{project.summary}</p>
+            <div className="grid gap-5 text-sm leading-8 text-[#5f7278] sm:text-base">
+              <p>{project.description}</p>
+              <p>{project.summary}</p>
+            </div>
           </div>
 
-          <aside className="project-detail-sidebar">
-            <div className="project-detail-sidebar-card">
-              <span className="card-label">Services</span>
-              <div className="project-service-list">
-                {project.services.map((service) => (
-                  <span key={service}>{service}</span>
-                ))}
-              </div>
-            </div>
+          <aside>
+            <Card className="rounded-[1.7rem] border-white/60 bg-white/75 py-0 shadow-[0_24px_70px_rgba(10,29,35,0.1)] backdrop-blur">
+              <CardContent className="p-6">
+                <span className="inline-flex text-[0.76rem] font-extrabold uppercase tracking-[0.16em] text-[#143a46]">Services</span>
+                <div className="mt-5 flex flex-wrap gap-2.5">
+                  {project.services.map((service) => (
+                    <Badge key={service} variant="secondary" className="rounded-full px-3 py-1 text-sm font-semibold">
+                      {service}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </aside>
         </div>
       </section>
 
-      <section className="project-gallery-section">
-        <div className="container">
-          <div className="section-heading project-detail-section-heading">
-            <span className="eyebrow">Gallery</span>
-            <h2>이미지 중심으로 보는 프로젝트 장면</h2>
-            <p>실제 이미지가 업로드되면 이 섹션이 포트폴리오형 갤러리로 바로 채워집니다.</p>
+      <section className="px-4 pb-20 pt-8 sm:px-6">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="max-w-3xl">
+            <Badge variant="outline" className="w-fit rounded-full border-[#143a46]/15 bg-white/70 px-3 py-1 uppercase tracking-[0.18em] text-[#143a46]">
+              Gallery
+            </Badge>
+            <h2 className="mt-4 font-serif text-[clamp(2.2rem,4vw,4rem)] leading-[1.02] tracking-[-0.04em] text-balance">이미지 중심으로 보는 프로젝트 장면</h2>
+            <p className="mt-4 text-sm leading-8 text-[#5f7278] sm:text-base">실제 이미지가 업로드되면 이 섹션이 포트폴리오형 갤러리로 바로 채워집니다.</p>
           </div>
 
-          <div className="project-gallery-grid">
+          <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {project.images.map((image, index) => (
               <ProjectImageFrame
                 key={image.id}
                 src={image.imageUrl}
                 alt={image.altText}
-                sizes="(max-width: 980px) 100vw, 50vw"
-                className={index === 0 ? "project-gallery-item project-gallery-item-large" : "project-gallery-item"}
-                imageClassName="project-detail-image"
-                fallbackClassName="project-detail-fallback"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className={index === 0 ? "relative min-h-[420px] overflow-hidden rounded-[2rem] shadow-[0_24px_80px_rgba(10,29,35,0.12)] lg:min-h-[520px]" : "relative min-h-[320px] overflow-hidden rounded-[2rem] shadow-[0_24px_80px_rgba(10,29,35,0.1)] lg:min-h-[380px]"}
+                fallbackClassName="p-7 [&>span]:text-[0.78rem] [&>span]:font-extrabold [&>span]:uppercase [&>span]:tracking-[0.16em] [&>span]:opacity-80 [&>strong]:max-w-[10ch] [&>strong]:font-serif [&>strong]:text-[clamp(2rem,4vw,3rem)] [&>strong]:leading-[0.95]"
                 eyebrow={`Scene ${index + 1}`}
                 title={project.title}
               />
