@@ -22,7 +22,8 @@ export function useActionFeedback(state: ActionState, options?: { redirectTo?: s
       toast.success(state.message);
 
       if (options?.redirectTo) {
-        router.push(options.redirectTo);
+        router.replace(options.redirectTo);
+        return;
       }
 
       router.refresh();

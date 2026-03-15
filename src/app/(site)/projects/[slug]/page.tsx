@@ -73,7 +73,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#fcfcfc_100%)] text-[#10232b]">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#fcfcfc_100%)] pt-[4.25rem] text-[#10232b] sm:pt-[4.75rem]">
       <section className="px-4 pb-8 pt-10 sm:px-6">
         <div className="mx-auto grid w-full max-w-7xl gap-7">
           <Link

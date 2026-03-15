@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import {
-  AnimatePresence,
-  LayoutGroup,
   motion,
   useReducedMotion,
   useScroll,
@@ -15,26 +13,6 @@ import { ProjectCard } from "@/components/site/project-card";
 import type { ProjectSummary } from "@/lib/projects";
 import type { WorkItemSummary } from "@/lib/work-items";
 import { cn } from "@/lib/utils";
-
-const navigationItems = [
-  { href: "#work", label: "워크" },
-  { href: "#projects", label: "프로젝트" },
-  { href: "#pricing", label: "가격" },
-  { href: "#features", label: "강점" },
-  { href: "#contact", label: "문의" },
-];
-
-const metrics = [
-  { value: "42+", label: "브랜드 런칭 및 리브랜딩" },
-  { value: "93%", label: "재의뢰 및 장기 파트너십 비율" },
-  { value: "4주", label: "MVP 랜딩 평균 제작 기간" },
-];
-
-const serviceHighlights = [
-  "브랜드 전략과 카피 방향 동시 정리",
-  "전환 흐름 중심의 랜딩 구조 설계",
-  "디자인-개발 간극을 줄이는 구현 가이드",
-];
 
 const pricingPlans = [
   {
@@ -242,252 +220,43 @@ function WorkCard({ item, index, shouldReduceMotion }: { item: WorkItemSummary; 
 export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]; projects: ProjectSummary[] }) {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const { scrollYProgress } = useScroll();
-  const progressScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
   const heroY = useTransform(scrollYProgress, [0, 1], [0, shouldReduceMotion ? 0 : -36]);
   const orbLeftY = useTransform(scrollYProgress, [0, 1], [0, shouldReduceMotion ? 0 : -72]);
   const orbRightY = useTransform(scrollYProgress, [0, 1], [0, shouldReduceMotion ? 0 : 96]);
   const revealProps = getRevealProps(shouldReduceMotion);
   const hoverLift = getHoverLift(shouldReduceMotion);
-  const [activeSection, setActiveSection] = useState("#top");
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const sectionIds = ["top", "work", "projects", "pricing", "features", "contact"];
-    const elements = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter((element): element is HTMLElement => Boolean(element));
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
-        if (visible?.target.id) {
-          setActiveSection(`#${visible.target.id}`);
-        }
-      },
-      {
-        rootMargin: "-28% 0px -48% 0px",
-        threshold: [0.2, 0.35, 0.5, 0.7],
-      },
-    );
-
-    elements.forEach((element) => observer.observe(element));
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
 
   return (
     <main
       id="main-content"
-      className="relative overflow-x-hidden bg-[linear-gradient(180deg,#ffffff_0%,#fcfcfc_100%)] text-[#10232b]"
+      className="relative overflow-x-hidden bg-[linear-gradient(180deg,#ffffff_0%,#fcfcfc_100%)] pt-[4.25rem] text-[#10232b] sm:pt-[4.75rem]"
     >
-      <motion.div className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-[linear-gradient(90deg,#c78f62,#143a46)] shadow-[0_6px_18px_rgba(20,58,70,0.16)]" style={{ scaleX: progressScale }} aria-hidden="true" />
       <motion.div className="pointer-events-none absolute left-[-120px] top-24 h-80 w-80 rounded-full bg-black/[0.04] blur-xl" aria-hidden="true" style={{ y: orbLeftY }} />
       <motion.div className="pointer-events-none absolute right-[-120px] top-[420px] h-96 w-96 rounded-full bg-black/[0.05] blur-xl" aria-hidden="true" style={{ y: orbRightY }} />
 
-      <header className="sticky top-0 z-40 border-b border-black/8 bg-white/80 backdrop-blur-[18px] max-md:static">
+      <motion.section id="top" className="scroll-mt-28 w-full border-b border-[#10232b]/8 bg-transparent pb-12 pt-12 sm:pb-14 sm:pt-14 md:pb-18 md:pt-24" style={{ y: heroY }} variants={sectionVariants} {...revealProps}>
         <motion.div
-          className={cn(containerClass, "flex min-h-[88px] items-center justify-between gap-6 max-md:min-h-[76px]")}
-          initial={shouldReduceMotion ? false : { opacity: 0, y: -16 }}
+          variants={cardVariants}
+          className="flex min-h-[calc(100vh-9rem)] w-full items-center px-4 sm:px-6 md:px-8"
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
-          <motion.a
-            href="#top"
-            aria-label="PHIM 홈으로 이동"
-            onClick={() => setActiveSection("#top")}
-            className="inline-flex items-center"
-            whileHover={shouldReduceMotion ? undefined : { y: -2, scale: 1.02 }}
-            whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-          >
-            <Image src="/phim-logo.png" alt="PHIM 로고" width={110} height={42} priority />
-          </motion.a>
-
-          <LayoutGroup id="desktop-nav">
-            <nav className="hidden items-center gap-3 text-[0.95rem] text-[#5f7278] lg:flex" aria-label="섹션 이동">
-              {navigationItems.map((item) => {
-                const isActive = activeSection === item.href;
-
-                return (
-                  <motion.a
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setActiveSection(item.href)}
-                    className={cn(
-                      "relative rounded-full px-4 py-2.5 transition",
-                      isActive ? "text-[#10232b]" : "hover:bg-white/60 hover:text-[#10232b]",
-                    )}
-                    whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                    whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-                  >
-                    {isActive ? <motion.span layoutId="nav-active-pill" className="absolute inset-0 rounded-full border border-[#143a46]/8 bg-[#143a46]/10" aria-hidden="true" /> : null}
-                    <span className="relative z-10">{item.label}</span>
-                  </motion.a>
-                );
-              })}
-            </nav>
-          </LayoutGroup>
-
-          <div className="flex items-center gap-3">
-            <motion.button
-              type="button"
-              className="relative flex size-12 items-center justify-center rounded-full border border-[#10232b]/10 bg-white/60 text-[#10232b] lg:hidden"
-              aria-label={isMobileMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="mobile-navigation"
-              onClick={() => setIsMobileMenuOpen((open) => !open)}
-              whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
-            >
-              <motion.span className="absolute left-[13px] top-4 h-0.5 w-5 rounded-full bg-current" animate={isMobileMenuOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }} />
-              <motion.span className="absolute left-[13px] top-[23px] h-0.5 w-5 rounded-full bg-current" animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }} />
-              <motion.span className="absolute left-[13px] top-[30px] h-0.5 w-5 rounded-full bg-current" animate={isMobileMenuOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }} />
-            </motion.button>
-
-            <motion.a
-              href="#contact"
-              className="hidden min-h-11 items-center justify-center rounded-full bg-[#143a46] px-5 text-sm font-bold !text-[#fffdf9] hover:!text-[#fffdf9] focus-visible:!text-[#fffdf9] active:!text-[#fffdf9] md:inline-flex"
-              onClick={() => setActiveSection("#contact")}
-              whileHover={shouldReduceMotion ? undefined : { y: -2, scale: 1.01 }}
-              whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-            >
-              상담 문의
-            </motion.a>
-          </div>
-        </motion.div>
-
-        <AnimatePresence initial={false}>
-          {isMobileMenuOpen ? (
-            <motion.div
-              id="mobile-navigation"
-              className={cn(containerClass, "mb-3 rounded-[1.75rem] border border-black/8 bg-white/95 shadow-[0_24px_60px_rgba(0,0,0,0.08)] backdrop-blur-[20px] lg:hidden")}
-              initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -12 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <LayoutGroup id="mobile-nav">
-                <nav className="grid gap-2 p-3" aria-label="모바일 섹션 이동">
-                  {navigationItems.map((item) => {
-                    const isActive = activeSection === item.href;
-
-                    return (
-                      <motion.a
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          "relative inline-flex min-h-13 items-center justify-center rounded-full font-bold",
-                          isActive ? "text-[#10232b]" : "hover:bg-white/60",
-                        )}
-                        onClick={() => {
-                          setActiveSection(item.href);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-                      >
-                        {isActive ? <motion.span layoutId="mobile-nav-active-pill" className="absolute inset-0 rounded-full bg-white/60" aria-hidden="true" /> : null}
-                        <span className="relative z-10">{item.label}</span>
-                      </motion.a>
-                    );
-                  })}
-                  <motion.a
-                    href="#contact"
-                    className="inline-flex min-h-13 items-center justify-center rounded-full bg-[#143a46] font-bold !text-[#fffdf9] hover:!text-[#fffdf9] focus-visible:!text-[#fffdf9] active:!text-[#fffdf9]"
-                    onClick={() => {
-                      setActiveSection("#contact");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-                  >
-                    상담 문의
-                  </motion.a>
-                </nav>
-              </LayoutGroup>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </header>
-
-      <motion.section id="top" className="scroll-mt-28 px-0 pb-10 pt-8 md:pt-18" style={{ y: heroY }}>
-        <motion.div className={cn(containerClass, "grid items-stretch gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]")} variants={sectionVariants} {...revealProps}>
-          <motion.div variants={cardVariants} className="[content-visibility:auto]">
-            <span className={eyebrowClass}>Creative Digital Agency</span>
-            <motion.h1
-              className="mt-5 max-w-[10ch] font-serif text-[clamp(3.2rem,8vw,6.2rem)] leading-[0.95] tracking-[-0.05em] text-balance text-[#10232b] max-md:max-w-none"
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.8, ease: [0.22, 1, 0.36, 1] }}
-            >
-              브랜드가 더 선명하게
+          <div className="w-full">
+            <span className="inline-flex items-center gap-2 text-[0.78rem] font-extrabold uppercase tracking-[0.18em] text-[#10232b]/68">PHIM Studio</span>
+            <div className="mt-6 w-40 border-t border-[#10232b]/10" aria-hidden="true" />
+            <h1 className="mt-8 max-w-[11ch] text-balance font-serif text-[clamp(3rem,8vw,7rem)] leading-[0.94] tracking-[-0.065em] text-[#10232b]">
+              조용하지만
               <br />
-              팔리도록 디자인합니다.
-            </motion.h1>
-            <motion.p variants={cardVariants} className="mt-5 max-w-2xl text-sm leading-8 text-[#5f7278] sm:text-base">
-              PHIM은 브랜드 전략, 랜딩 페이지, 캠페인 비주얼을 하나의 흐름으로 연결해 첫 인상부터 문의 전환까지 설계하는 디자인 에이전시입니다.
-            </motion.p>
-
-            <motion.ul className="mt-8 grid gap-3" aria-label="핵심 제공 가치" variants={sectionVariants}>
-              {serviceHighlights.map((item) => (
-                <motion.li key={item} variants={cardVariants} className="flex items-center gap-3 font-semibold text-[#10232b]">
-                  <span className="size-2 rounded-full bg-[linear-gradient(180deg,#c78f62,#143a46)] shadow-[0_0_0_6px_rgba(199,143,98,0.12)]" />
-                  {item}
-                </motion.li>
-              ))}
-            </motion.ul>
-
-            <motion.div className="mt-8 flex flex-wrap gap-3" variants={cardVariants}>
-              <ActionLink href="#projects" label="프로젝트 보기" />
-              <ActionLink href="#pricing" label="패키지 확인" kind="secondary" />
-            </motion.div>
-
-            <motion.div className="mt-12 grid gap-4 md:grid-cols-3" aria-label="주요 성과 지표" variants={sectionVariants}>
-              {metrics.map((item) => (
-                <motion.article key={item.label} className={cn(glassCardClass, "p-6 [content-visibility:auto]")} variants={cardVariants} whileHover={hoverLift}>
-                  <strong className="block text-[2rem] font-semibold">{item.value}</strong>
-                  <span className="mt-2 block text-sm leading-6 text-[#5f7278]">{item.label}</span>
-                </motion.article>
-              ))}
-            </motion.div>
-          </motion.div>
-
-          <motion.div className="grid gap-4 [content-visibility:auto]" variants={sectionVariants}>
-            <motion.div
-              className={cn(
-                glassCardClass,
-                "flex min-h-[320px] flex-col justify-end bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(255,255,255,0.86)),linear-gradient(135deg,rgba(20,58,70,0.14),rgba(199,143,98,0.2))] p-7",
-              )}
-              variants={cardVariants}
-              whileHover={hoverLift}
-            >
-              <span className={eyebrowClass}>Selected Direction</span>
-              <h2 className="mt-4 font-serif text-[clamp(1.9rem,4vw,3rem)] leading-none tracking-[-0.04em] text-[#10232b]">감도 있는 브랜드를 위한 전환형 랜딩</h2>
-              <p className={cn("mt-4", panelCopyClass)}>
-                비주얼 완성도와 비즈니스 목표를 동시에 다루는 구조로, 브랜드 소개가 아닌 행동을 만드는 페이지를 제안합니다.
-              </p>
-              <dl className="mt-7 grid gap-4 md:grid-cols-2 md:gap-5 max-md:grid-cols-1">
-                <div className="border-t border-[#10232b]/10 pt-4">
-                  <dt className="text-sm text-[#5f7278]">추천 대상</dt>
-                  <dd className="mt-2 font-bold leading-7 text-[#10232b]">초기 런칭, 리브랜딩, 캠페인 전환 최적화</dd>
-                </div>
-                <div className="border-t border-[#10232b]/10 pt-4">
-                  <dt className="text-sm text-[#5f7278]">평균 리드 타임</dt>
-                  <dd className="mt-2 font-bold leading-7 text-[#10232b]">전략 포함 3-6주</dd>
-                </div>
-              </dl>
-            </motion.div>
-
-            <motion.div className="grid gap-4 md:grid-cols-2 max-md:grid-cols-1" variants={sectionVariants}>
-              <motion.div className={cn(glassCardClass, "p-7")} variants={cardVariants} whileHover={hoverLift}>
-                <span className={eyebrowClass}>Process</span>
-                <p className={cn("mt-4", panelCopyClass)}>브랜드 정리 → 콘텐츠 구조 → 디자인 → 개발 적용 → 런칭 QA</p>
-              </motion.div>
-              <motion.div className="rounded-[1.9rem] bg-[linear-gradient(180deg,rgba(20,58,70,0.96),rgba(12,41,49,0.96))] p-7 text-[#f4efe8] shadow-[0_24px_80px_rgba(10,29,35,0.14)]" variants={cardVariants} whileHover={hoverLift}>
-                <span className="inline-flex items-center gap-2 text-[0.78rem] font-extrabold uppercase tracking-[0.18em] text-[#f4efe8]">Best For</span>
-                <p className="mt-4 text-sm leading-7 text-[#f4efe8]">런칭 준비 중인 스타트업, 리브랜딩이 필요한 서비스, 캠페인 집중 브랜드</p>
-              </motion.div>
-            </motion.div>
-          </motion.div>
+              선명한 첫인상을 만듭니다.
+            </h1>
+            <p className="mt-7 max-w-2xl text-base leading-8 text-[#5f7278] sm:text-[1.05rem]">
+              PHIM Studio는 브랜드 디렉션, 비주얼 아이덴티티, 디지털 경험을 차분한 밀도와 분명한 태도로 설계하는 미니멀 크리에이티브 스튜디오입니다.
+            </p>
+            <p className="mt-5 text-sm font-semibold tracking-[0.08em] text-[#10232b]/64">
+              새로운 프로젝트 의뢰를 받고 있습니다.
+            </p>
+          </div>
         </motion.div>
       </motion.section>
 
@@ -634,30 +403,6 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
           </motion.div>
         </motion.div>
       </motion.section>
-
-      <footer className="border-t border-[#10232b]/8 px-0 py-8">
-        <motion.div
-          className={cn(containerClass, "flex flex-col gap-5 text-sm text-[#5f7278] lg:flex-row lg:items-center lg:justify-between")}
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
-          whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-          viewport={shouldReduceMotion ? undefined : { once: true, amount: 0.6 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-5">
-            <Image src="/phim-logo.png" alt="PHIM 로고" width={100} height={38} />
-            <p>브랜드의 첫 인상을 전환으로 연결하는 디자인 에이전시 PHIM.</p>
-          </div>
-
-          <div className="flex flex-wrap gap-5">
-            <a href="#projects">프로젝트</a>
-            <a href="#pricing">가격</a>
-            <a href="#features">강점</a>
-            <a href="#contact">문의</a>
-          </div>
-
-          <p>© 2026 PHIM Agency. All rights reserved.</p>
-        </motion.div>
-      </footer>
     </main>
   );
 }
