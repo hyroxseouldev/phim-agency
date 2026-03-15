@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdminUser } from "@/lib/admin-auth";
 import { type ActionState } from "@/lib/action-state";
+import { parseMediaCropInput } from "@/lib/media-crop";
 
 function slugify(value: string) {
   return value
@@ -77,7 +78,7 @@ function validateMp4Upload(file: File | null, { required, fieldLabel }: { requir
   return null;
 }
 
-async function uploadFile(bucket: "work-media" | "project-media", pathPrefix: string, file: File) {
+async function uploadFile(bucket: "work-media" | "project-media" | "project-video", pathPrefix: string, file: File) {
   const { supabase } = await requireAdminUser();
   const extension = getFileExtension(file);
   const filePath = `${pathPrefix}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
@@ -94,7 +95,7 @@ async function uploadFile(bucket: "work-media" | "project-media", pathPrefix: st
   return filePath;
 }
 
-async function removeFiles(bucket: "work-media" | "project-media", paths: string[]) {
+async function removeFiles(bucket: "work-media" | "project-media" | "project-video", paths: string[]) {
   if (paths.length === 0) {
     return;
   }
@@ -247,6 +248,7 @@ export async function createProjectAction(_previousState: ActionState, formData:
     const impact = String(formData.get("impact") ?? "").trim();
     const file = formData.get("thumbnailImage") as File | null;
     const hoverVideo = formData.get("hoverVideo") as File | null;
+    const hoverVideoCrop = parseMediaCropInput(formData.get("hoverVideoCrop"));
 
     if (!title || !slug || !category || !summary || !description || !impact || !file || file.size === 0) {
       return failure("프로젝트 생성에는 기본 정보와 썸네일 이미지가 필요합니다.");
@@ -265,7 +267,7 @@ export async function createProjectAction(_previousState: ActionState, formData:
     }
 
     const thumbnailImagePath = await uploadFile("project-media", `projects/${slug}`, file);
-    const hoverVideoPath = hoverVideo && hoverVideo.size > 0 ? await uploadFile("project-media", `projects/${slug}/hover`, hoverVideo) : null;
+    const hoverVideoPath = hoverVideo && hoverVideo.size > 0 ? await uploadFile("project-video", `projects/${slug}/hover`, hoverVideo) : null;
 
     const { error } = await supabase.from("projects").insert({
       slug,
@@ -276,6 +278,7 @@ export async function createProjectAction(_previousState: ActionState, formData:
       impact,
       thumbnail_image_path: thumbnailImagePath,
       hover_video_path: hoverVideoPath,
+      hover_video_crop: hoverVideoPath ? hoverVideoCrop : null,
       client_name: String(formData.get("clientName") ?? "").trim() || null,
       year: String(formData.get("year") ?? "").trim() || null,
       services: splitServices(String(formData.get("services") ?? "")),
@@ -316,6 +319,7 @@ export async function updateProjectAction(
     const impact = String(formData.get("impact") ?? "").trim();
     const file = formData.get("thumbnailImage") as File | null;
     const hoverVideo = formData.get("hoverVideo") as File | null;
+    const hoverVideoCrop = parseMediaCropInput(formData.get("hoverVideoCrop"));
     const removeHoverVideo = String(formData.get("removeHoverVideo") ?? "") === "on";
 
     if (!title || !slug || !category || !summary || !description || !impact) {
@@ -336,6 +340,7 @@ export async function updateProjectAction(
 
     let thumbnailImagePath = currentImagePath;
     let hoverVideoPath = currentHoverVideoPath;
+    let nextHoverVideoCrop = hoverVideoCrop;
 
     if (file && file.size > 0) {
       thumbnailImagePath = await uploadFile("project-media", `projects/${slug}`, file);
@@ -345,13 +350,18 @@ export async function updateProjectAction(
     }
 
     if (hoverVideo && hoverVideo.size > 0) {
-      hoverVideoPath = await uploadFile("project-media", `projects/${slug}/hover`, hoverVideo);
+      hoverVideoPath = await uploadFile("project-video", `projects/${slug}/hover`, hoverVideo);
       if (currentHoverVideoPath) {
-        await removeFiles("project-media", [currentHoverVideoPath]);
+        await removeFiles("project-video", [currentHoverVideoPath]);
       }
     } else if (removeHoverVideo && currentHoverVideoPath) {
-      await removeFiles("project-media", [currentHoverVideoPath]);
+      await removeFiles("project-video", [currentHoverVideoPath]);
       hoverVideoPath = null;
+      nextHoverVideoCrop = null;
+    }
+
+    if (!hoverVideoPath) {
+      nextHoverVideoCrop = null;
     }
 
     const { error } = await supabase
@@ -365,6 +375,7 @@ export async function updateProjectAction(
         impact,
         thumbnail_image_path: thumbnailImagePath,
         hover_video_path: hoverVideoPath,
+        hover_video_crop: nextHoverVideoCrop,
         client_name: String(formData.get("clientName") ?? "").trim() || null,
         year: String(formData.get("year") ?? "").trim() || null,
         services: splitServices(String(formData.get("services") ?? "")),
@@ -409,10 +420,11 @@ export async function deleteProjectAction(
       return failure(error.message);
     }
 
-    await removeFiles(
-      "project-media",
-      [thumbnailImagePath, hoverVideoPath, ...galleryImagePaths].filter((path): path is string => Boolean(path)),
-    );
+    await removeFiles("project-media", [thumbnailImagePath, ...galleryImagePaths].filter((path): path is string => Boolean(path)));
+
+    if (hoverVideoPath) {
+      await removeFiles("project-video", [hoverVideoPath]);
+    }
 
     revalidatePath("/");
     revalidatePath("/admin");

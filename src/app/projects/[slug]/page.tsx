@@ -18,7 +18,7 @@ async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
-    .select("id, slug, title, category, summary, description, impact, thumbnail_image_path, hover_video_path, client_name, year, services")
+    .select("id, slug, title, category, summary, description, impact, thumbnail_image_path, hover_video_path, hover_video_crop, client_name, year, services")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
@@ -73,12 +73,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(199,143,98,0.2),transparent_28%),linear-gradient(180deg,#f7f2ec_0%,#f4eee7_45%,#faf6f1_100%)] text-[#10232b]">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#fcfcfc_100%)] text-[#10232b]">
       <section className="px-4 pb-8 pt-10 sm:px-6">
         <div className="mx-auto grid w-full max-w-7xl gap-7">
           <Link
             href="/#projects"
-            className="inline-flex min-h-11 w-fit items-center rounded-full border border-[#10232b]/12 bg-white/70 px-5 text-sm font-semibold text-[#10232b] backdrop-blur"
+            className="inline-flex min-h-11 w-fit items-center rounded-full border border-black/8 bg-white/88 px-5 text-sm font-semibold text-[#10232b] backdrop-blur"
           >
             프로젝트 목록으로
           </Link>
@@ -94,19 +94,19 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <Card className="rounded-[1.7rem] border-transparent bg-[linear-gradient(180deg,rgba(20,58,70,0.96),rgba(12,41,49,0.96))] py-0 shadow-[0_24px_80px_rgba(10,29,35,0.14)]">
+            <Card className="rounded-[1.7rem] border-black/8 bg-[#111111] py-0 shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
               <CardContent className="p-6">
                 <span className="inline-flex text-[0.76rem] font-extrabold uppercase tracking-[0.16em] text-[#f8f4ee]/80">Impact</span>
                 <strong className="mt-3 block text-lg leading-7 text-[#f8f4ee]">{project.impact}</strong>
               </CardContent>
             </Card>
-            <Card className="rounded-[1.7rem] border-white/60 bg-white/75 py-0 shadow-[0_24px_70px_rgba(10,29,35,0.1)] backdrop-blur">
+            <Card className="rounded-[1.7rem] border-black/8 bg-white/88 py-0 shadow-[0_20px_60px_rgba(0,0,0,0.06)] backdrop-blur">
               <CardContent className="p-6">
                 <span className="inline-flex text-[0.76rem] font-extrabold uppercase tracking-[0.16em] text-[#143a46]">Client</span>
                 <strong className="mt-3 block text-lg leading-7 text-[#10232b]">{project.clientName ?? "Confidential"}</strong>
               </CardContent>
             </Card>
-            <Card className="rounded-[1.7rem] border-white/60 bg-white/75 py-0 shadow-[0_24px_70px_rgba(10,29,35,0.1)] backdrop-blur">
+            <Card className="rounded-[1.7rem] border-black/8 bg-white/88 py-0 shadow-[0_20px_60px_rgba(0,0,0,0.06)] backdrop-blur">
               <CardContent className="p-6">
                 <span className="inline-flex text-[0.76rem] font-extrabold uppercase tracking-[0.16em] text-[#143a46]">Year</span>
                 <strong className="mt-3 block text-lg leading-7 text-[#10232b]">{project.year ?? "Ongoing"}</strong>

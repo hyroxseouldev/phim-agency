@@ -14,7 +14,7 @@ export default async function Home() {
       .order("sort_order", { ascending: true }),
     supabase
       .from("projects")
-      .select("id, slug, title, category, summary, description, impact, thumbnail_image_path, hover_video_path")
+      .select("id, slug, title, category, summary, description, impact, thumbnail_image_path, hover_video_path, hover_video_crop")
       .eq("is_active", true)
       .eq("is_featured", true)
       .order("sort_order", { ascending: true }),

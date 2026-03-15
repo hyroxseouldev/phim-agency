@@ -1,5 +1,7 @@
 import "server-only";
 
+import { type MediaCrop, isMediaCrop } from "@/lib/media-crop";
+import { getStoragePublicUrl } from "@/lib/projects";
 import { createClient } from "@/lib/supabase/server";
 
 export type WorkItemAdmin = {
@@ -13,7 +15,7 @@ export type WorkItemAdmin = {
   is_active: boolean;
 };
 
-export type ProjectAdmin = {
+type ProjectAdminRow = {
   id: string;
   slug: string;
   title: string;
@@ -23,6 +25,7 @@ export type ProjectAdmin = {
   impact: string;
   thumbnail_image_path: string;
   hover_video_path: string | null;
+  hover_video_crop: MediaCrop | null;
   client_name: string | null;
   year: string | null;
   services: string[];
@@ -31,7 +34,7 @@ export type ProjectAdmin = {
   is_active: boolean;
 };
 
-export type ProjectImageAdmin = {
+type ProjectImageAdminRow = {
   id: string;
   project_id: string;
   image_path: string;
@@ -39,10 +42,30 @@ export type ProjectImageAdmin = {
   sort_order: number;
 };
 
-function normalizeProject(project: ProjectAdmin): ProjectAdmin {
+export type ProjectAdmin = ProjectAdminRow & {
+  thumbnailImageUrl: string;
+  hoverVideoUrl: string | null;
+  hoverVideoCrop: MediaCrop | null;
+};
+
+export type ProjectImageAdmin = ProjectImageAdminRow & {
+  imageUrl: string;
+};
+
+function normalizeProject(project: ProjectAdminRow): ProjectAdmin {
   return {
     ...project,
     services: project.services ?? [],
+    thumbnailImageUrl: getStoragePublicUrl("project-media", project.thumbnail_image_path),
+    hoverVideoUrl: project.hover_video_path ? getStoragePublicUrl("project-video", project.hover_video_path) : null,
+    hoverVideoCrop: isMediaCrop(project.hover_video_crop) ? project.hover_video_crop : null,
+  };
+}
+
+function normalizeProjectImage(image: ProjectImageAdminRow): ProjectImageAdmin {
+  return {
+    ...image,
+    imageUrl: getStoragePublicUrl("project-media", image.image_path),
   };
 }
 
@@ -70,8 +93,8 @@ export async function getAdminDashboardData() {
 
   return {
     workItems: (workItems ?? []) as WorkItemAdmin[],
-    projects: (projects ?? []).map((project) => normalizeProject(project as ProjectAdmin)),
-    projectImages: (projectImages ?? []) as ProjectImageAdmin[],
+    projects: (projects ?? []).map((project) => normalizeProject(project as ProjectAdminRow)),
+    projectImages: (projectImages ?? []).map((image) => normalizeProjectImage(image as ProjectImageAdminRow)),
   };
 }
 
@@ -117,7 +140,7 @@ export async function getAdminProjects() {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((project) => normalizeProject(project as ProjectAdmin));
+  return (data ?? []).map((project) => normalizeProject(project as ProjectAdminRow));
 }
 
 export async function getAdminProjectById(id: string) {
@@ -128,7 +151,7 @@ export async function getAdminProjectById(id: string) {
     throw new Error(error.message);
   }
 
-  return data ? normalizeProject(data as ProjectAdmin) : null;
+  return data ? normalizeProject(data as ProjectAdminRow) : null;
 }
 
 export async function getAdminProjectImages(projectId: string) {
@@ -143,5 +166,5 @@ export async function getAdminProjectImages(projectId: string) {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as ProjectImageAdmin[];
+  return (data ?? []).map((image) => normalizeProjectImage(image as ProjectImageAdminRow));
 }

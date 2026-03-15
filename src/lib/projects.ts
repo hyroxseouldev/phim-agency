@@ -1,3 +1,4 @@
+import { type MediaCrop, isMediaCrop } from "@/lib/media-crop";
 import { supabaseUrl } from "@/lib/supabase/config";
 
 type ProjectRow = {
@@ -10,6 +11,7 @@ type ProjectRow = {
   impact: string;
   thumbnail_image_path: string;
   hover_video_path?: string | null;
+  hover_video_crop?: MediaCrop | null;
   client_name?: string | null;
   year?: string | null;
   services?: string[] | null;
@@ -34,6 +36,7 @@ export type ProjectSummary = {
   thumbnailImageUrl: string;
   hoverVideoPath: string | null;
   hoverVideoUrl: string | null;
+  hoverVideoCrop: MediaCrop | null;
 };
 
 export type ProjectImage = {
@@ -67,7 +70,8 @@ export function mapProjectSummary(row: ProjectRow): ProjectSummary {
     thumbnailImagePath: row.thumbnail_image_path,
     thumbnailImageUrl: getStoragePublicUrl("project-media", row.thumbnail_image_path),
     hoverVideoPath: row.hover_video_path ?? null,
-    hoverVideoUrl: row.hover_video_path ? getStoragePublicUrl("project-media", row.hover_video_path) : null,
+    hoverVideoUrl: row.hover_video_path ? getStoragePublicUrl("project-video", row.hover_video_path) : null,
+    hoverVideoCrop: isMediaCrop(row.hover_video_crop) ? row.hover_video_crop : null,
   };
 }
 

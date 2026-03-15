@@ -86,7 +86,7 @@ export function AdminShell({
 
   return (
     <SidebarProvider defaultOpen>
-      <div className="flex min-h-screen w-full bg-[radial-gradient(circle_at_top_left,rgba(199,143,98,0.18),transparent_24%),linear-gradient(180deg,#f6f0e8_0%,#f3eee7_44%,#f8f5f1_100%)]">
+      <div className="flex min-h-screen w-full bg-[linear-gradient(180deg,#ffffff_0%,#fafafa_100%)]">
         <Sidebar collapsible="icon" className="border-r-0">
           <SidebarHeader className="gap-4 px-4 py-5">
             <div className="flex items-center gap-3 rounded-2xl bg-white/8 px-3 py-3 text-sidebar-foreground">

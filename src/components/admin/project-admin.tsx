@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useActionState } from "react";
 import { Eye, Images, PencilLine, Plus } from "lucide-react";
@@ -15,7 +16,6 @@ import {
   AdminDetailHeader,
   AdminSectionHeader,
   Field,
-  FileInput,
   FormCard,
   TextAreaInput,
   TextInput,
@@ -24,6 +24,8 @@ import {
 } from "@/components/admin/admin-form-primitives";
 import { ImageCropInput } from "@/components/admin/image-crop-input";
 import { PendingSubmitButton } from "@/components/admin/pending-submit-button";
+import { VideoCropInput } from "@/components/admin/video-crop-input";
+import { CroppedVideo } from "@/components/shared/cropped-video";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +33,22 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { initialActionState } from "@/lib/action-state";
 import type { ProjectAdmin, ProjectImageAdmin } from "@/lib/admin";
+
+function MediaPreview({
+  src,
+  alt,
+  className,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
+  return (
+    <div className={className ?? "relative aspect-square overflow-hidden rounded-[1.25rem] bg-[#f3ede4]"}>
+      <Image src={src} alt={alt} fill sizes="(max-width: 1024px) 100vw, 240px" className="object-cover" />
+    </div>
+  );
+}
 
 export function CreateProjectForm({ redirectTo }: { redirectTo?: string }) {
   const [state, formAction] = useActionState(createProjectAction, initialActionState);
@@ -88,21 +106,21 @@ export function CreateProjectForm({ redirectTo }: { redirectTo?: string }) {
               required
               buttonLabel="썸네일 선택"
               emptyLabel="썸네일 이미지를 선택하고 1:1 기준으로 크롭하세요."
-              description="프로젝트 썸네일은 기본 1:1 비율로 자른 뒤 저장합니다."
+              description="프로젝트 썸네일은 기본 1:1 비율로 크롭한 뒤 1600x1600 정사각형으로 저장합니다."
               defaultAspect={1}
+              outputWidth={1600}
             />
           </Field>
           <Field htmlFor="project-create-hover-video" label="호버 mp4 (선택)">
-            <div className="grid gap-2">
-              <FileInput
-                id="project-create-hover-video"
-                name="hoverVideo"
-                type="file"
-                accept="video/mp4,.mp4"
-                className="pt-2"
-              />
-              <p className="text-xs leading-6 text-[#5f7278]">브라우저 호환을 위해 H.264 코덱의 mp4 파일을 권장합니다.</p>
-            </div>
+            <VideoCropInput
+              id="project-create-hover-video"
+              name="hoverVideo"
+              cropName="hoverVideoCrop"
+              buttonLabel="호버 영상 선택"
+              emptyLabel="호버 영상을 선택하고 프로젝트 카드 기준으로 구도를 저장하세요."
+              description="브라우저 호환을 위해 H.264 코덱의 mp4 파일을 권장합니다. 영상은 원본 그대로 저장되고, 카드에 보일 구도만 함께 저장합니다."
+              defaultAspect={1}
+            />
           </Field>
         </div>
 
@@ -208,15 +226,11 @@ export function ProjectsListPage({ projects, projectImages }: { projects: Projec
                         </TableCell>
                         <TableCell className="align-top text-sm font-medium text-[#10232b]">{project.sort_order}</TableCell>
                         <TableCell className="max-w-[240px] align-top whitespace-normal text-sm leading-6 break-all text-[#5f7278]">
-                          <div className="grid gap-2">
-                            <div>
-                              <span className="text-xs font-semibold tracking-[0.12em] text-[#10232b] uppercase">Thumb</span>
-                              <p>{project.thumbnail_image_path}</p>
-                            </div>
-                            <div>
-                              <span className="text-xs font-semibold tracking-[0.12em] text-[#10232b] uppercase">Hover</span>
-                              <p>{project.hover_video_path ?? "미설정"}</p>
-                            </div>
+                          <div className="grid gap-3">
+                            <MediaPreview src={project.thumbnailImageUrl} alt={`${project.title} 썸네일`} className="relative aspect-square w-24 overflow-hidden rounded-[1rem] bg-[#f3ede4]" />
+                            <span className="text-xs font-semibold tracking-[0.12em] text-[#5f7278] uppercase">
+                              {project.hoverVideoUrl ? "Hover video ready" : "Hover video none"}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell className="px-6 py-5 align-top">
@@ -283,10 +297,12 @@ function ProjectImageEditor({ image, project }: { image: ProjectImageAdmin; proj
           <Images className="mr-1 size-3.5" />
           Gallery Item
         </Badge>
-        <Badge variant="outline" className="max-w-full rounded-full border-[#143a46]/12 bg-white/70 px-3 py-1 font-medium break-all text-[#143a46]">
-          {image.image_path}
+        <Badge variant="outline" className="rounded-full border-[#143a46]/12 bg-white/70 px-3 py-1 text-[#143a46]">
+          #{image.sort_order}
         </Badge>
       </div>
+
+      <MediaPreview src={image.imageUrl} alt={image.alt_text ?? `${project.title} 갤러리 이미지`} className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-[#f3ede4]" />
 
       <form action={updateAction} className="grid gap-4 xl:grid-cols-[1fr_180px_auto] xl:items-end">
         <Field htmlFor={`project-image-alt-${image.id}`} label="대체 텍스트">
@@ -347,6 +363,34 @@ export function ProjectDetailPage({ project, images }: { project: ProjectAdmin; 
           </div>
 
           <form action={updateAction} className="grid gap-5">
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className="grid gap-3">
+                <span className="text-xs font-semibold tracking-[0.14em] text-[#5f7278] uppercase">현재 썸네일</span>
+                <MediaPreview src={project.thumbnailImageUrl} alt={`${project.title} 썸네일`} className="relative aspect-square overflow-hidden rounded-[1.5rem] bg-[#f3ede4] shadow-[0_18px_45px_rgba(10,29,35,0.08)]" />
+              </div>
+              {project.hoverVideoUrl ? (
+                <div className="grid gap-3">
+                  <span className="text-xs font-semibold tracking-[0.14em] text-[#5f7278] uppercase">현재 호버 영상</span>
+                  <CroppedVideo
+                    src={project.hoverVideoUrl}
+                    crop={project.hoverVideoCrop}
+                    muted
+                    loop
+                    playsInline
+                    controls
+                    className="aspect-square rounded-[1.5rem] bg-[#10232b] shadow-[0_18px_45px_rgba(10,29,35,0.12)]"
+                  />
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  <span className="text-xs font-semibold tracking-[0.14em] text-[#5f7278] uppercase">현재 호버 영상</span>
+                  <div className="flex aspect-square items-center justify-center rounded-[1.5rem] bg-white/70 px-5 text-sm leading-7 text-[#5f7278] shadow-[0_18px_45px_rgba(10,29,35,0.06)]">
+                    등록된 호버 영상이 없습니다.
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid gap-4 xl:grid-cols-3">
               <Field htmlFor={`project-title-${project.id}`} label="제목">
                 <TextInput id={`project-title-${project.id}`} name="title" defaultValue={project.title} required />
@@ -395,21 +439,23 @@ export function ProjectDetailPage({ project, images }: { project: ProjectAdmin; 
                   name="thumbnailImage"
                   buttonLabel="새 썸네일 선택"
                   emptyLabel="새 썸네일 이미지를 선택하면 기존 이미지를 교체합니다."
-                  description="기본 1:1 크롭으로 저장되며, 적용하지 않으면 기존 썸네일을 유지합니다."
+                  description="기본 1:1 크롭으로 저장되며, 1600x1600 정사각형으로 맞춘 뒤 기존 썸네일을 교체합니다."
                   defaultAspect={1}
+                  outputWidth={1600}
                 />
               </Field>
               <Field htmlFor={`project-hover-video-${project.id}`} label="호버 mp4 교체">
-                <div className="grid gap-2">
-                  <FileInput
-                    id={`project-hover-video-${project.id}`}
-                    name="hoverVideo"
-                    type="file"
-                    accept="video/mp4,.mp4"
-                    className="pt-2"
-                  />
-                  <p className="text-xs leading-6 text-[#5f7278]">브라우저 호환을 위해 H.264 코덱의 mp4 파일을 권장합니다.</p>
-                </div>
+                <VideoCropInput
+                  id={`project-hover-video-${project.id}`}
+                  name="hoverVideo"
+                  cropName="hoverVideoCrop"
+                  buttonLabel="새 호버 영상 선택"
+                  emptyLabel="새 호버 영상을 선택하면 기존 영상을 교체합니다. 기존 영상만 다시 크롭할 수도 있습니다."
+                  description="브라우저 호환을 위해 H.264 코덱의 mp4 파일을 권장합니다. 카드 기준 크롭 구도도 함께 저장됩니다."
+                  existingVideoUrl={project.hoverVideoUrl}
+                  existingCrop={project.hoverVideoCrop}
+                  defaultAspect={1}
+                />
               </Field>
             </div>
 
@@ -426,14 +472,6 @@ export function ProjectDetailPage({ project, images }: { project: ProjectAdmin; 
                 <span className="invisible h-5 text-sm">호버 영상 제거</span>
                 <ToggleField id={`project-hover-video-remove-${project.id}`} name="removeHoverVideo" label="기존 호버 영상 제거" defaultChecked={false} />
               </div>
-            </div>
-
-            <div className="rounded-[1.5rem] border border-[#10232b]/8 bg-white/70 px-4 py-4 text-sm leading-7 text-[#5f7278]">
-              현재 썸네일 경로: <span className="font-medium text-[#10232b]">{project.thumbnail_image_path}</span>
-            </div>
-
-            <div className="rounded-[1.5rem] border border-[#10232b]/8 bg-white/70 px-4 py-4 text-sm leading-7 text-[#5f7278]">
-              현재 호버 영상 경로: <span className="font-medium text-[#10232b]">{project.hover_video_path ?? "미설정"}</span>
             </div>
 
             <PendingSubmitButton label="변경사항 저장" pendingLabel="저장 중..." className="h-11 w-fit rounded-2xl px-5" />

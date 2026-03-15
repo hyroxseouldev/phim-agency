@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   AnimatePresence,
   LayoutGroup,
   motion,
-  useMotionValue,
   useReducedMotion,
   useScroll,
   useTransform,
   type Variants,
 } from "framer-motion";
+import { ProjectCard } from "@/components/site/project-card";
 import type { ProjectSummary } from "@/lib/projects";
 import type { WorkItemSummary } from "@/lib/work-items";
 import { cn } from "@/lib/utils";
@@ -137,7 +136,7 @@ const eyebrowClass = "inline-flex items-center gap-2 text-[0.78rem] font-extrabo
 const sectionTitleClass = "font-serif text-[clamp(2.2rem,4vw,4rem)] leading-[0.98] tracking-[-0.04em] text-[#10232b]";
 const sectionCopyClass = "text-sm leading-7 text-[#5f7278] sm:text-base";
 const glassCardClass =
-  "rounded-[1.9rem] border border-[#10232b]/10 bg-[rgba(255,255,255,0.72)] shadow-[0_24px_80px_rgba(10,29,35,0.12)] backdrop-blur-[14px]";
+  "rounded-[1.9rem] border border-black/8 bg-[rgba(255,255,255,0.82)] shadow-[0_20px_60px_rgba(0,0,0,0.06)] backdrop-blur-[14px]";
 const panelCopyClass = "text-sm leading-7 text-[#5f7278] sm:text-base";
 
 function getRevealProps(shouldReduceMotion: boolean) {
@@ -199,163 +198,43 @@ function ActionLink({ href, label, kind = "primary" }: { href: string; label: st
   );
 }
 
-function ProjectCard({ project, shouldReduceMotion }: { project: ProjectSummary; shouldReduceMotion: boolean }) {
-  const rotateX = useMotionValue(0);
-  const rotateY = useMotionValue(0);
-  const sheenX = useTransform(rotateY, [-8, 8], ["40%", "60%"]);
-  const sheenY = useTransform(rotateX, [-8, 8], ["42%", "58%"]);
-  const [hasImageError, setHasImageError] = useState(false);
-  const [failedVideoUrl, setFailedVideoUrl] = useState<string | null>(null);
-  const [isMediaActive, setIsMediaActive] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const hasVideoError = failedVideoUrl === project.hoverVideoUrl;
-
-  useEffect(() => {
-    const video = videoRef.current;
-
-    if (!video || !project.hoverVideoUrl || hasVideoError) {
-      return;
-    }
-
-    if (isMediaActive) {
-      void video.play().catch(() => {
-        video.pause();
-        setFailedVideoUrl(project.hoverVideoUrl);
-        setIsMediaActive(false);
-      });
-      return;
-    }
-
-    video.pause();
-    video.currentTime = 0;
-  }, [hasVideoError, isMediaActive, project.hoverVideoUrl]);
-
-  const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-    if (shouldReduceMotion) return;
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
-    const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
-
-    rotateX.set(offsetY * -10);
-    rotateY.set(offsetX * 10);
-  };
-
-  const resetTilt = () => {
-    rotateX.set(0);
-    rotateY.set(0);
-  };
-
-  return (
-    <Link href={`/projects/${project.slug}`} className="block" aria-label={`${project.title} 프로젝트 보기`}>
-      <motion.article
-        className={cn(glassCardClass, "group relative overflow-hidden p-7")}
-        variants={cardVariants}
-        whileHover={getHoverLift(shouldReduceMotion)}
-        onHoverStart={() => setIsMediaActive(true)}
-        onHoverEnd={() => setIsMediaActive(false)}
-        onFocusCapture={() => setIsMediaActive(true)}
-        onBlurCapture={() => setIsMediaActive(false)}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={resetTilt}
-        onPointerCancel={resetTilt}
-        style={
-          shouldReduceMotion
-            ? undefined
-            : {
-                rotateX,
-                rotateY,
-                transformPerspective: 1200,
-              }
-        }
-      >
-        <div className="relative -mx-7 -mt-7 mb-6 aspect-square overflow-hidden bg-[linear-gradient(135deg,rgba(20,58,70,0.2),rgba(199,143,98,0.24))]">
-          {project.thumbnailImageUrl && !hasImageError ? (
-            <>
-              <Image
-                src={project.thumbnailImageUrl}
-                alt={`${project.title} 썸네일 이미지`}
-                fill
-                sizes="(max-width: 1024px) 100vw, 33vw"
-                className={cn(
-                  "object-cover transition duration-500 group-hover:scale-[1.03]",
-                  project.hoverVideoUrl && !hasVideoError ? "duration-300" : undefined,
-                  isMediaActive && project.hoverVideoUrl && !hasVideoError ? "scale-[1.01] opacity-0" : "opacity-100",
-                )}
-                onError={() => setHasImageError(true)}
-              />
-              {project.hoverVideoUrl && !hasVideoError ? (
-                <video
-                  ref={videoRef}
-                  src={project.hoverVideoUrl}
-                  poster={project.thumbnailImageUrl}
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-hidden="true"
-                  onError={() => {
-                    setFailedVideoUrl(project.hoverVideoUrl);
-                    setIsMediaActive(false);
-                  }}
-                  className={cn(
-                    "absolute inset-0 h-full w-full object-cover transition duration-300",
-                    isMediaActive ? "opacity-100" : "pointer-events-none opacity-0",
-                  )}
-                />
-              ) : null}
-            </>
-          ) : (
-            <div className="flex h-full w-full flex-col justify-end gap-3 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%),linear-gradient(135deg,rgba(8,25,31,0.98),rgba(199,143,98,0.8))] p-6 text-[#f8f4ee]">
-              <span className="text-[0.78rem] font-extrabold uppercase tracking-[0.14em] opacity-80">{project.category}</span>
-              <strong className="max-w-[10ch] font-serif text-[clamp(2rem,4vw,3rem)] leading-[0.95]">{project.title}</strong>
-            </div>
-          )}
-          <motion.div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-[-45%] bg-[radial-gradient(circle,rgba(255,255,255,0.34),transparent_34%)]"
-            style={shouldReduceMotion ? undefined : { x: sheenX, y: sheenY }}
-          />
-        </div>
-
-        <span className={eyebrowClass}>{project.category}</span>
-        <h3 className="mt-4 text-2xl leading-tight font-semibold text-[#10232b] text-balance">{project.title}</h3>
-        <p className="mt-4 text-sm leading-7 text-[#5f7278] sm:text-base">{project.summary}</p>
-        <div className="mt-6 border-t border-[#10232b]/10 pt-4 text-sm font-bold text-[#10232b]">{project.impact}</div>
-      </motion.article>
-    </Link>
-  );
-}
-
 function WorkCard({ item, index, shouldReduceMotion }: { item: WorkItemSummary; index: number; shouldReduceMotion: boolean }) {
   const [hasImageError, setHasImageError] = useState(false);
 
   return (
-    <motion.article className={cn(glassCardClass, "overflow-hidden p-7")} variants={cardVariants} whileHover={getHoverLift(shouldReduceMotion)}>
-      <div className="relative -mx-7 -mt-7 mb-6 aspect-square overflow-hidden bg-[linear-gradient(135deg,rgba(20,58,70,0.2),rgba(199,143,98,0.24))]">
+    <motion.article
+      className="flex items-center gap-4 border-b border-[#10232b]/10 bg-transparent py-5 last:border-b-0 max-sm:items-start"
+      variants={cardVariants}
+      whileHover={getHoverLift(shouldReduceMotion)}
+    >
+      <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-[linear-gradient(135deg,rgba(20,58,70,0.2),rgba(199,143,98,0.24))] max-sm:h-16 max-sm:w-16">
         {item.coverImageUrl && !hasImageError ? (
           <Image
             src={item.coverImageUrl}
             alt={`${item.title} 대표 이미지`}
             fill
-            sizes="(max-width: 1024px) 100vw, 33vw"
+            sizes="80px"
             className="object-cover"
             onError={() => setHasImageError(true)}
           />
         ) : (
-          <div className="flex h-full w-full flex-col justify-end gap-3 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%),linear-gradient(135deg,rgba(8,25,31,0.98),rgba(199,143,98,0.8))] p-6 text-[#f8f4ee]">
-            <span className="text-[0.78rem] font-extrabold uppercase tracking-[0.14em] opacity-80">{item.category}</span>
-            <strong className="max-w-[10ch] font-serif text-[clamp(2rem,4vw,3rem)] leading-[0.95]">{item.title}</strong>
+          <div className="flex h-full w-full flex-col justify-end gap-1 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%),linear-gradient(135deg,rgba(8,25,31,0.98),rgba(199,143,98,0.8))] p-3 text-[#f8f4ee]">
+            <span className="text-[0.58rem] font-extrabold uppercase tracking-[0.12em] opacity-80">{item.category}</span>
+            <strong className="max-w-[7ch] font-serif text-sm leading-[0.95]">{item.title}</strong>
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-extrabold tracking-[0.14em] text-[#5f7278]">{String(index + 1).padStart(2, "0")}</span>
-        <span className={cn(eyebrowClass, "text-right text-[0.72rem]")}>{item.category}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3 max-sm:flex-col max-sm:items-start">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-extrabold tracking-[0.14em] text-[#5f7278]">{String(index + 1).padStart(2, "0")}</span>
+            <span className={cn(eyebrowClass, "text-[0.7rem]")}>{item.category}</span>
+          </div>
+          <h3 className="text-xl leading-tight font-semibold text-[#10232b] sm:text-2xl">{item.title}</h3>
+        </div>
+        <p className="mt-2 max-w-3xl text-sm leading-7 text-[#5f7278] sm:text-base">{item.summary}</p>
       </div>
-      <h3 className="mt-4 text-2xl leading-tight font-semibold text-[#10232b]">{item.title}</h3>
-      <p className="mt-3 text-sm leading-7 text-[#5f7278] sm:text-base">{item.summary}</p>
     </motion.article>
   );
 }
@@ -402,13 +281,13 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
   return (
     <main
       id="main-content"
-      className="relative overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(199,143,98,0.22),transparent_30%),linear-gradient(180deg,#f7f1ea_0%,#f3ede6_42%,#f7f4ef_100%)] text-[#10232b]"
+      className="relative overflow-x-hidden bg-[linear-gradient(180deg,#ffffff_0%,#fcfcfc_100%)] text-[#10232b]"
     >
       <motion.div className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-[linear-gradient(90deg,#c78f62,#143a46)] shadow-[0_6px_18px_rgba(20,58,70,0.16)]" style={{ scaleX: progressScale }} aria-hidden="true" />
-      <motion.div className="pointer-events-none absolute left-[-120px] top-24 h-80 w-80 rounded-full bg-[rgba(199,143,98,0.18)] blur-xl" aria-hidden="true" style={{ y: orbLeftY }} />
-      <motion.div className="pointer-events-none absolute right-[-120px] top-[420px] h-96 w-96 rounded-full bg-[rgba(20,58,70,0.12)] blur-xl" aria-hidden="true" style={{ y: orbRightY }} />
+      <motion.div className="pointer-events-none absolute left-[-120px] top-24 h-80 w-80 rounded-full bg-black/[0.04] blur-xl" aria-hidden="true" style={{ y: orbLeftY }} />
+      <motion.div className="pointer-events-none absolute right-[-120px] top-[420px] h-96 w-96 rounded-full bg-black/[0.05] blur-xl" aria-hidden="true" style={{ y: orbRightY }} />
 
-      <header className="sticky top-0 z-40 border-b border-[#10232b]/8 bg-[rgba(244,239,232,0.72)] backdrop-blur-[18px] max-md:static">
+      <header className="sticky top-0 z-40 border-b border-black/8 bg-white/80 backdrop-blur-[18px] max-md:static">
         <motion.div
           className={cn(containerClass, "flex min-h-[88px] items-center justify-between gap-6 max-md:min-h-[76px]")}
           initial={shouldReduceMotion ? false : { opacity: 0, y: -16 }}
@@ -482,7 +361,7 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
           {isMobileMenuOpen ? (
             <motion.div
               id="mobile-navigation"
-              className={cn(containerClass, "mb-3 rounded-[1.75rem] border border-[#10232b]/8 bg-[rgba(250,246,241,0.94)] shadow-[0_26px_70px_rgba(10,29,35,0.14)] backdrop-blur-[20px] lg:hidden")}
+              className={cn(containerClass, "mb-3 rounded-[1.75rem] border border-black/8 bg-white/95 shadow-[0_24px_60px_rgba(0,0,0,0.08)] backdrop-blur-[20px] lg:hidden")}
               initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -12 }}
@@ -649,7 +528,7 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
             />
           </motion.div>
 
-          <motion.div className="mt-8 grid gap-5 lg:grid-cols-3" variants={sectionVariants}>
+          <motion.div className="mt-8" variants={sectionVariants}>
             {workItems.map((item, index) => (
               <WorkCard key={item.id} item={item} index={index} shouldReduceMotion={shouldReduceMotion} />
             ))}
@@ -667,9 +546,9 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
             />
           </motion.div>
 
-          <motion.div className="mt-8 grid gap-5 lg:grid-cols-3" variants={sectionVariants}>
+          <motion.div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" variants={sectionVariants}>
             {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} shouldReduceMotion={shouldReduceMotion} />
+              <ProjectCard key={project.id} project={project} shouldReduceMotion={shouldReduceMotion} variants={cardVariants} />
             ))}
           </motion.div>
         </div>
