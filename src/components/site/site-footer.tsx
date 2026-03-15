@@ -15,7 +15,7 @@ const footerNavItems: SiteNavItem[] = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-[#10232b]/8 px-0 py-8 sm:py-10">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex w-full flex-col gap-8 px-4 sm:px-6 md:px-8 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-[28rem]">
           <p className="text-[0.72rem] font-extrabold uppercase tracking-[0.18em] text-[#143a46]">Footer</p>
           <h2 className="mt-4 font-serif text-[clamp(1.8rem,4vw,3.25rem)] leading-[0.98] tracking-[-0.04em] text-[#10232b]">

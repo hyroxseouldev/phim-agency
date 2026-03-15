@@ -109,7 +109,7 @@ const cardVariants: Variants = {
   },
 };
 
-const containerClass = "mx-auto w-full max-w-7xl px-4 sm:px-6";
+const containerClass = "w-full px-4 sm:px-6 md:px-8 2xl:px-10";
 const eyebrowClass = "inline-flex items-center gap-2 text-[0.78rem] font-extrabold uppercase tracking-[0.18em] text-[#143a46]";
 const sectionTitleClass = "font-serif text-[clamp(2.2rem,4vw,4rem)] leading-[0.98] tracking-[-0.04em] text-[#10232b]";
 const sectionCopyClass = "text-sm leading-7 text-[#5f7278] sm:text-base";
@@ -242,7 +242,7 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="w-full">
+          <div className="w-full max-w-[72rem]">
             <span className="inline-flex items-center gap-2 text-[0.78rem] font-extrabold uppercase tracking-[0.18em] text-[#10232b]/68">PHIM Studio</span>
             <div className="mt-6 w-40 border-t border-[#10232b]/10" aria-hidden="true" />
             <h1 className="mt-8 max-w-[11ch] text-balance font-serif text-[clamp(3rem,8vw,7rem)] leading-[0.94] tracking-[-0.065em] text-[#10232b]">
@@ -270,7 +270,7 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
             />
           </motion.div>
 
-          <motion.div className="mt-8 grid gap-5 lg:grid-cols-3" variants={sectionVariants}>
+          <motion.div className="mt-8 grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]" variants={sectionVariants}>
             {processSteps.map((step) => (
               <motion.article
                 key={step.step}
@@ -315,7 +315,7 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
             />
           </motion.div>
 
-          <motion.div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" variants={sectionVariants}>
+          <motion.div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4" variants={sectionVariants}>
             {projects.map((project) => (
               <ProjectCard key={project.id} project={project} shouldReduceMotion={shouldReduceMotion} variants={cardVariants} />
             ))}
@@ -329,7 +329,7 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
             <SectionHeading eyebrow="Pricing" title="브랜드 단계에 맞춘 제안" body="목표와 일정, 필요한 산출물의 깊이에 따라 가장 효율적인 구성으로 제안합니다." />
           </motion.div>
 
-          <motion.div className="mt-8 grid gap-5 lg:grid-cols-3" variants={sectionVariants}>
+          <motion.div className="mt-8 grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]" variants={sectionVariants}>
             {pricingPlans.map((plan) => (
               <motion.article
                 key={plan.name}
@@ -359,7 +359,7 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
       </motion.section>
 
       <motion.section id="features" className="scroll-mt-28 px-0 py-12" variants={sectionVariants} {...revealProps}>
-        <div className={cn(containerClass, "grid items-start gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]")}>
+        <div className={cn(containerClass, "grid items-start gap-6 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.2fr)]")}>
           <motion.div variants={cardVariants}>
             <SectionHeading
               eyebrow="Features"
@@ -368,7 +368,7 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
             />
           </motion.div>
 
-          <motion.div className="grid gap-5 md:grid-cols-2" variants={sectionVariants}>
+          <motion.div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]" variants={sectionVariants}>
             {features.map((feature) => (
               <motion.article key={feature.title} className={cn(glassCardClass, "p-7 [content-visibility:auto]")} variants={cardVariants} whileHover={hoverLift}>
                 <h3 className="text-2xl leading-tight font-semibold text-[#10232b] text-balance">{feature.title}</h3>
@@ -380,11 +380,11 @@ export function HomePage({ workItems, projects }: { workItems: WorkItemSummary[]
       </motion.section>
 
       <motion.section id="contact" className="scroll-mt-28 px-0 pb-18 pt-12" variants={sectionVariants} {...revealProps}>
-        <motion.div className={cn(containerClass, glassCardClass, "grid gap-6 rounded-[2.25rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(255,255,255,0.62)),linear-gradient(120deg,rgba(199,143,98,0.12),rgba(20,58,70,0.08))] p-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]")} variants={cardVariants} whileHover={hoverLift}>
+        <motion.div className={cn(containerClass, glassCardClass, "grid gap-6 rounded-[2.25rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(255,255,255,0.62)),linear-gradient(120deg,rgba(199,143,98,0.12),rgba(20,58,70,0.08))] p-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,420px)]")} variants={cardVariants} whileHover={hoverLift}>
           <motion.div variants={cardVariants}>
             <span className={eyebrowClass}>Contact</span>
             <h2 className="mt-4 font-serif text-[clamp(2.2rem,4vw,4rem)] leading-[1.02] tracking-[-0.04em] text-[#10232b]">다음 런칭, PHIM과 같이 준비해볼까요?</h2>
-            <p className="mt-4 text-sm leading-8 text-[#5f7278] sm:text-base">
+            <p className="mt-4 max-w-3xl text-sm leading-8 text-[#5f7278] sm:text-base">
               브랜드의 현재 상황, 원하는 일정, 필요한 페이지 범위를 알려주시면 가장 적합한 방식으로 빠르게 제안드립니다.
             </p>
             <motion.div className="mt-8 flex flex-wrap gap-3" variants={cardVariants}>
